@@ -8,20 +8,37 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [8-jdk, 11-jdk, 15-jdk]
-    runs-on: ubuntu-20.04
+        java: [8, 11, 15] # Java versions to test
+    runs-on: ubuntu-latest
     container:
-      image: openjdk:${{ matrix.java }}
+      image: eclipse-temurin:${{ matrix.java }}
       options: --user root
     steps:
-      - uses: actions/checkout@v2
-      - uses: gradle/wrapper-validation-action@v1
-      - run: ./gradlew check build publishToMavenLocal --stacktrace --parallel
-#      - run: mkdir run && echo "eula=true" >> run/eula.txt
-#      - run: ./gradlew runAutoTestServer --stacktrace
-      - uses: actions/upload-artifact@v2
+      # Check out the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Validate Gradle wrapper
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      # Build the project
+      - name: Build and Test
+        run: ./gradlew check build publishToMavenLocal --stacktrace --parallel
+
+      # (Optional) Run Auto Test Server
+      # Uncomment if needed
+      # - name: Run Auto Test Server
+      #   run: |
+      #     mkdir run
+      #     echo "eula=true" >> run/eula.txt
+      #     ./gradlew runAutoTestServer --stacktrace
+
+      # Upload built artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: Artifact
+          name: Build Artifacts
           path: |
             build/libs/patchwork-api-*.jar
             !build/libs/patchwork-api-*-*.jar
